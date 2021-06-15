@@ -62,11 +62,11 @@ console.log(document.body)
 class Planet {
     constructor(pos,size,resolution){
         let geometry = new THREE.IcosahedronGeometry(size,resolution); 
-        let material = new THREE.MeshLambertMaterial({wireframe:false});
+        let material = new THREE.MeshLambertMaterial({wireframe:true});
     
 
         this.object = new THREE.Mesh( geometry, material );
-        this.mass = Math.pow(size,3)*Math.PI*4/3
+        this.mass = Math.pow(size,3)*Math.PI*4/3*2
         this.velocity = new THREE.Vector3( Math.random()/100, Math.random()/100, Math.random()/100);
         this.acceleration = new THREE.Vector3( 0, 0, 0);
 
@@ -98,8 +98,8 @@ class Planet {
 
 let planets = []
 
-for(let i=0; i<10; i++){
-    planets.push(new Planet({x:Math.random()*10-5,z:Math.random()*10-5,y:Math.random()*10-5},Math.random()*2,10))
+for(let i=0; i<15; i++){
+    planets.push(new Planet({x:Math.random()*10-5,z:Math.random()*10-5,y:Math.random()*10-5},Math.random(),10))
 }
 
 function animate() { 
@@ -119,7 +119,7 @@ function animate() {
         planet.gravity()
     }
     for(let planet of planets){
-        // planet.move()
+        planet.move()
     }
 }
 animate();
