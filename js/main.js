@@ -11,6 +11,14 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+}
+window.addEventListener( 'resize', onWindowResize );
+
+
 //lights
 const dirLight = new THREE.DirectionalLight( 0xffffff, 0.2, 0 );
 dirLight.position.set( 1, 1, 0 ).normalize();
@@ -22,8 +30,34 @@ scene.add( ambientLight );
 
 scene.fog = new THREE.Fog(0x000000, 1, 8);
 
-var flyControls = new PointerLockControls(camera, document.body);
-// flyControls.lookSpeed = 0.1;
+var pointerControls = new PointerLockControls(camera, document.body);
+
+pointerControls.addEventListener('lock',()=>{
+    document.querySelector("#menu").style.display="none"
+})
+
+pointerControls.addEventListener('unlock',()=>{
+    document.querySelector("#menu").style.display="flex"
+})
+
+document.addEventListener("keypress", (e)=>{
+    if (e.key == "Escape") {
+        pointerControls.unlock()
+    }
+})
+
+var isForward = false
+document.addEventListener("mousedown", ()=>{isForward=true})
+document.addEventListener("mouseup", ()=>{isForward=false})
+
+
+
+
+document.querySelector("#start-btn").addEventListener("click", ()=>{
+    pointerControls.connect()
+    pointerControls.lock()
+})
+console.log(document.body)
 
 class Planet {
     constructor(pos,size,resolution){
@@ -57,7 +91,6 @@ class Planet {
                 planetPos.multiplyScalar(0.00001)
                 let force = planetPos.divideScalar(dist*dist)
                 this.acceleration.add(force)
-                console.log(dist)
             }
         }
     }
@@ -73,16 +106,21 @@ function animate() {
     requestAnimationFrame( animate ); 
     renderer.render( scene, camera );
 
+    if(isForward){
+        let direction = pointerControls.getObject().getWorldDirection()
+        pointerControls.getObject().position.x += Math.sin(direction.x)/25
+        pointerControls.getObject().position.y += Math.sin(direction.y)/25
+        pointerControls.getObject().position.z += Math.sin(direction.z)/25
+    }
+
     var delta = clock.getDelta();
-    // flyControls.update(delta);
 
     for(let planet of planets){
         planet.gravity()
     }
     for(let planet of planets){
-        planet.move()
+        // planet.move()
     }
-    // camera.position.add(camera.getWorldDirection().multiplyScalar(0.01))
 }
 animate();
 
