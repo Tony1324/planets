@@ -57,17 +57,16 @@ document.querySelector("#start-btn").addEventListener("click", ()=>{
     pointerControls.connect()
     pointerControls.lock()
 })
-console.log(document.body)
 
 class Planet {
     constructor(pos,size,resolution){
         let geometry = new THREE.IcosahedronGeometry(size,resolution); 
-        let material = new THREE.MeshLambertMaterial({wireframe:true});
+        let material = new THREE.MeshLambertMaterial({wireframe:false});
     
-
+        this.radius = size
         this.object = new THREE.Mesh( geometry, material );
         this.mass = Math.pow(size,3)*Math.PI*4/3*2
-        this.velocity = new THREE.Vector3( Math.random()/100, Math.random()/100, Math.random()/100);
+        this.velocity = new THREE.Vector3( Math.random()/1000, Math.random()/1000, Math.random()/1000);
         this.acceleration = new THREE.Vector3( 0, 0, 0);
 
         Object.assign(this.object.position,pos)
@@ -79,7 +78,7 @@ class Planet {
         this.object.position.add(this.velocity)
     }
 
-    gravity(){
+    physics(){
         this.acceleration = new THREE.Vector3( 0, 0, 0 )
         for(let planet of planets){
             if(planet != this){
@@ -87,10 +86,28 @@ class Planet {
                 let planetPos = planet.object.position.clone()
                 planetPos.sub(this.object.position)
                 planetPos.normalize()
+                let direction = planetPos.clone()
                 planetPos.multiplyScalar(planet.mass)
-                planetPos.multiplyScalar(0.00001)
+                planetPos.multiplyScalar(0.00002)
                 let force = planetPos.divideScalar(dist*dist)
                 this.acceleration.add(force)
+
+
+                if(dist < (planet.radius + this.radius)){
+                    console.log(`colliding`)
+                    let correction = (this.radius + planet.radius) - dist
+                    correction /= 2
+
+
+                    direction.multiplyScalar(correction)
+
+                    planet.object.position.add(direction)
+                    direction.multiplyScalar(-1)
+                    this.object.position.add(direction)
+                    
+                    this.velocity.multiplyScalar(0.999)
+
+                }
             }
         }
     }
@@ -116,7 +133,7 @@ function animate() {
     var delta = clock.getDelta();
 
     for(let planet of planets){
-        planet.gravity()
+        planet.physics()
     }
     for(let planet of planets){
         planet.move()
