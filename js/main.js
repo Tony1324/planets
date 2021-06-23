@@ -40,16 +40,35 @@ pointerControls.addEventListener('unlock',()=>{
     document.querySelector("#menu").style.display="flex"
 })
 
-document.addEventListener("keypress", (e)=>{
-    if (e.key == "Escape") {
-        pointerControls.unlock()
+
+var isForward = false
+var isBackward = false
+var isLeft = false
+var isRight = false
+
+window.addEventListener("keydown", (e)=>{
+    if(e.keyCode == 87){
+        isForward = true
+    }else if(e.keyCode == 83){
+        isBackward = true
+    }else if(e.keyCode == 65){
+        isLeft = true
+    }else if(e.keyCode == 68){
+        isRight = true
     }
 })
 
-var isForward = false
-document.addEventListener("mousedown", ()=>{isForward=true})
-document.addEventListener("mouseup", ()=>{isForward=false})
-
+window.addEventListener("keyup", (e)=>{
+    if(e.keyCode == 87){
+        isForward = false
+    }else if(e.keyCode == 83){
+        isBackward = false
+    }else if(e.keyCode == 65){
+        isLeft = false
+    }else if(e.keyCode == 68){
+        isRight = false
+    }
+})
 
 
 
@@ -75,7 +94,9 @@ class Planet {
 
     move(){
         this.velocity.add(this.acceleration)
-        this.object.position.add(this.velocity)
+        let v = this.velocity.clone()
+        v.multiplyScalar(1/this.mass)
+        this.object.position.add(v)
     }
 
     physics(){
@@ -88,24 +109,30 @@ class Planet {
                 planetPos.normalize()
                 let direction = planetPos.clone()
                 planetPos.multiplyScalar(planet.mass)
+                planetPos.multiplyScalar(this.mass)
                 planetPos.multiplyScalar(0.00002)
                 let force = planetPos.divideScalar(dist*dist)
                 this.acceleration.add(force)
 
 
                 if(dist < (planet.radius + this.radius)){
-                    console.log(`colliding`)
                     let correction = (this.radius + planet.radius) - dist
                     correction /= 2
 
+                    let dir = direction.clone()
+                    dir.multiplyScalar(correction)
 
-                    direction.multiplyScalar(correction)
-
-                    planet.object.position.add(direction)
-                    direction.multiplyScalar(-1)
-                    this.object.position.add(direction)
+                    planet.object.position.add(dir)
+                    dir.multiplyScalar(-1)
+                    this.object.position.add(dir)
                     
-                    this.velocity.multiplyScalar(0.999)
+
+                    let v1 = direction.dot(this.velocity)
+                    let v2 = direction.dot(planet.velocity)
+
+                    direction.multiplyScalar((v1 - v2)*0.9)
+                    this.velocity.sub(direction)
+                    planet.velocity.add(direction)
 
                 }
             }
@@ -129,8 +156,20 @@ function animate() {
         pointerControls.getObject().position.y += Math.sin(direction.y)/25
         pointerControls.getObject().position.z += Math.sin(direction.z)/25
     }
+    if(isBackward){
+        let direction = pointerControls.getObject().getWorldDirection()
+        pointerControls.getObject().position.x -= Math.sin(direction.x)/25
+        pointerControls.getObject().position.y -= Math.sin(direction.y)/25
+        pointerControls.getObject().position.z -= Math.sin(direction.z)/25
+    }
 
-    var delta = clock.getDelta();
+    if(isLeft){
+        pointerControls.moveRight(-0.05)
+    }
+
+    if(isRight){
+        pointerControls.moveRight(0.05)
+    }
 
     for(let planet of planets){
         planet.physics()
