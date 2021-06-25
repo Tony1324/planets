@@ -4,6 +4,7 @@ import {PointerLockControls} from 'https://cdn.skypack.dev/three@0.129.0/example
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 const clock = new THREE.Clock();
+const raycaster = new THREE.Raycaster();
 
 
 const renderer = new THREE.WebGLRenderer();
@@ -45,27 +46,36 @@ var isForward = false
 var isBackward = false
 var isLeft = false
 var isRight = false
+var isPushing = false
+
+window.addEventListener("mousedown", ()=>{
+    isPushing = true
+})
+
+window.addEventListener("mouseup", ()=>{
+    isPushing = false
+})
 
 window.addEventListener("keydown", (e)=>{
-    if(e.keyCode == 87){
+    if(e.code == "KeyW"){
         isForward = true
-    }else if(e.keyCode == 83){
+    }else if(e.code == "KeyS"){
         isBackward = true
-    }else if(e.keyCode == 65){
+    }else if(e.code == "KeyA"){
         isLeft = true
-    }else if(e.keyCode == 68){
+    }else if(e.code == "KeyD"){
         isRight = true
     }
 })
 
 window.addEventListener("keyup", (e)=>{
-    if(e.keyCode == 87){
+    if(e.code == "KeyW"){
         isForward = false
-    }else if(e.keyCode == 83){
+    }else if(e.code == "KeyS"){
         isBackward = false
-    }else if(e.keyCode == 65){
+    }else if(e.code == "KeyA"){
         isLeft = false
-    }else if(e.keyCode == 68){
+    }else if(e.code == "KeyD"){
         isRight = false
     }
 })
@@ -146,9 +156,13 @@ for(let i=0; i<15; i++){
     planets.push(new Planet({x:Math.random()*10-5,z:Math.random()*10-5,y:Math.random()*10-5},Math.random(),10))
 }
 
+let intersects = []
+
 function animate() { 
     requestAnimationFrame( animate ); 
-    renderer.render( scene, camera );
+
+    intersects[0]?.object.material.color.set( 0xffffff );
+
 
     if(isForward){
         let direction = pointerControls.getObject().getWorldDirection()
@@ -177,6 +191,29 @@ function animate() {
     for(let planet of planets){
         planet.move()
     }
+
+    const center = new THREE.Vector2(0, 0)
+    raycaster.setFromCamera(center, camera)
+
+    intersects = raycaster.intersectObjects(scene.children)
+
+    intersects[0]?.object.material.color.set( 0x66ff66 );
+
+    if(isPushing){
+        for(let planet of planets){
+            if(planet.object == intersects[0]?.object){
+
+                intersects[0]?.object.material.color.set( 0x00ff00 );
+                let direction = pointerControls.getObject().getWorldDirection()
+                planet.velocity.x += Math.sin(direction.x)/250
+                planet.velocity.y += Math.sin(direction.y)/250
+                planet.velocity.z += Math.sin(direction.z)/250
+            }
+        }
+    }
+
+    renderer.render( scene, camera );
+
 }
 animate();
 
