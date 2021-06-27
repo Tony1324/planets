@@ -47,14 +47,25 @@ var isBackward = false
 var isLeft = false
 var isRight = false
 var isPushing = false
+var isPulling = false
 
-window.addEventListener("mousedown", ()=>{
-    isPushing = true
+window.addEventListener("mousedown", (e)=>{
+    if(e.which == 3){
+        isPulling = true
+    }else{
+        isPushing = true
+    }
 })
 
-window.addEventListener("mouseup", ()=>{
-    isPushing = false
+window.addEventListener("mouseup", (e)=>{
+    if(e.which == 3){
+        isPulling = false
+    }else{
+        isPushing = false
+    }
 })
+
+window.addEventListener("contextmenu", (e)=>{e.preventDefault()})
 
 window.addEventListener("keydown", (e)=>{
     if(e.code == "KeyW"){
@@ -90,7 +101,7 @@ document.querySelector("#start-btn").addEventListener("click", ()=>{
 class Planet {
     constructor(pos,size,resolution){
         let geometry = new THREE.IcosahedronGeometry(size,resolution); 
-        let material = new THREE.MeshLambertMaterial({wireframe:false});
+        let material = new THREE.MeshLambertMaterial({wireframe:true});
     
         this.radius = size
         this.object = new THREE.Mesh( geometry, material );
@@ -120,7 +131,7 @@ class Planet {
                 let direction = planetPos.clone()
                 planetPos.multiplyScalar(planet.mass)
                 planetPos.multiplyScalar(this.mass)
-                planetPos.multiplyScalar(0.00002)
+                planetPos.multiplyScalar(0.0001)
                 let force = planetPos.divideScalar(dist*dist)
                 this.acceleration.add(force)
 
@@ -199,15 +210,23 @@ function animate() {
 
     intersects[0]?.object.material.color.set( 0x66ff66 );
 
-    if(isPushing){
+    if(isPushing || isPulling){
         for(let planet of planets){
             if(planet.object == intersects[0]?.object){
 
                 intersects[0]?.object.material.color.set( 0x00ff00 );
                 let direction = pointerControls.getObject().getWorldDirection()
-                planet.velocity.x += Math.sin(direction.x)/250
-                planet.velocity.y += Math.sin(direction.y)/250
-                planet.velocity.z += Math.sin(direction.z)/250
+                if(isPulling){
+                    planet.velocity.x -= Math.sin(direction.x)/350 * planet.mass 
+                    planet.velocity.y -= Math.sin(direction.y)/350 * planet.mass
+                    planet.velocity.z -= Math.sin(direction.z)/350 * planet.mass
+                    planet.velocity.multiplyScalar(0.9)
+                }else{
+                    planet.velocity.x += Math.sin(direction.x)/350 * planet.mass
+                    planet.velocity.y += Math.sin(direction.y)/350 * planet.mass
+                    planet.velocity.z += Math.sin(direction.z)/350 * planet.mass
+                    planet.velocity.multiplyScalar(0.9)
+                }
             }
         }
     }
