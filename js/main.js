@@ -114,10 +114,11 @@ class Planet {
     }
 
     move(){
+        let a = this.acceleration.clone()
+        a.multiplyScalar(1/this.mass)
         this.velocity.add(this.acceleration)
-        let v = this.velocity.clone()
-        v.multiplyScalar(1/this.mass)
-        this.object.position.add(v)
+        this.velocity.multiplyScalar(0.999)
+        this.object.position.add(this.velocity)
     }
 
     physics(){
@@ -130,7 +131,6 @@ class Planet {
                 planetPos.normalize()
                 let direction = planetPos.clone()
                 planetPos.multiplyScalar(planet.mass)
-                planetPos.multiplyScalar(this.mass)
                 planetPos.multiplyScalar(0.0001)
                 let force = planetPos.divideScalar(dist*dist)
                 this.acceleration.add(force)
@@ -151,8 +151,15 @@ class Planet {
                     let v1 = direction.dot(this.velocity)
                     let v2 = direction.dot(planet.velocity)
 
+                    let totalMass = this.mass + planet.mass
+
+
                     direction.multiplyScalar((v1 - v2)*0.9)
-                    this.velocity.sub(direction)
+                    let f1 = direction.clone()
+                    f1.multiplyScalar(planet.mass/totalMass * 2)
+                    this.velocity.sub(f1)
+                    let f2 = direction.clone()
+                    f1.multiplyScalar(this.mass/totalMass * 2)
                     planet.velocity.add(direction)
 
                 }
@@ -217,14 +224,14 @@ function animate() {
                 intersects[0]?.object.material.color.set( 0x00ff00 );
                 let direction = pointerControls.getObject().getWorldDirection()
                 if(isPulling){
-                    planet.velocity.x -= Math.sin(direction.x)/350 * planet.mass 
-                    planet.velocity.y -= Math.sin(direction.y)/350 * planet.mass
-                    planet.velocity.z -= Math.sin(direction.z)/350 * planet.mass
+                    planet.velocity.x -= Math.sin(direction.x)/350
+                    planet.velocity.y -= Math.sin(direction.y)/350
+                    planet.velocity.z -= Math.sin(direction.z)/350
                     planet.velocity.multiplyScalar(0.9)
                 }else{
-                    planet.velocity.x += Math.sin(direction.x)/350 * planet.mass
-                    planet.velocity.y += Math.sin(direction.y)/350 * planet.mass
-                    planet.velocity.z += Math.sin(direction.z)/350 * planet.mass
+                    planet.velocity.x += Math.sin(direction.x)/350
+                    planet.velocity.y += Math.sin(direction.y)/350
+                    planet.velocity.z += Math.sin(direction.z)/350
                     planet.velocity.multiplyScalar(0.9)
                 }
             }
