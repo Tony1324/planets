@@ -12,6 +12,14 @@
         <p>Use wasd keys to move around</p>
         <p>left click on planets with mouse to push them, right click to pull</p>
         <button id="start-btn">click to start</button>
+        <br>
+        <button id="wireframe-btn">Wireframe on</button>
+        <br>
+        <p for="fog-input" id="fog-input-label">Fog distance (0 to turn off): 8</p>
+        <input type="range" name="fog-input" id="fog-input" min="0" max = "20" value="8">
+
+        <p for="gravity-input" id="gravity-input-label">Gravity strength: 30</p>
+        <input type="range" name="gravity-input" id="gravity-input" min="0" max = "100" value="30">
     </div>
     <script defer type="module" src="js/main.js"></script>
 </body>

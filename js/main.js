@@ -29,7 +29,7 @@ scene.add( dirLight );
 const ambientLight = new THREE.AmbientLight( 0xcccccc ); // soft white light
 scene.add( ambientLight );
 
-scene.fog = new THREE.Fog(0x000000, 1, 8);
+scene.fog = new THREE.Fog(0x000000, 0.1, 8);
 
 var pointerControls = new PointerLockControls(camera, document.body);
 
@@ -98,6 +98,8 @@ document.querySelector("#start-btn").addEventListener("click", ()=>{
     pointerControls.lock()
 })
 
+let gravity = 30
+
 class Planet {
     constructor(pos,size,resolution){
         let geometry = new THREE.IcosahedronGeometry(size,resolution); 
@@ -117,7 +119,6 @@ class Planet {
         let a = this.acceleration.clone()
         a.multiplyScalar(1/this.mass)
         this.velocity.add(this.acceleration)
-        this.velocity.multiplyScalar(0.999)
         this.object.position.add(this.velocity)
     }
 
@@ -131,7 +132,7 @@ class Planet {
                 planetPos.normalize()
                 let direction = planetPos.clone()
                 planetPos.multiplyScalar(planet.mass)
-                planetPos.multiplyScalar(0.0001)
+                planetPos.multiplyScalar(gravity/1000000)
                 let force = planetPos.divideScalar(dist*dist)
                 this.acceleration.add(force)
 
@@ -243,3 +244,34 @@ function animate() {
 }
 animate();
 
+
+
+
+//menu options
+let isWireframe = true
+
+document.querySelector("#wireframe-btn").addEventListener("click",()=>{
+    isWireframe = !isWireframe
+    document.querySelector("#wireframe-btn").innerHTML = isWireframe ? "Wireframe on" : "Wireframe off"
+    for(let planet of planets){
+        planet.object.material.wireframe = isWireframe
+    } 
+})
+
+document.querySelector("#fog-input").addEventListener("change", (e)=>{
+
+    let fog = parseInt(e.target.value)
+    document.querySelector("#fog-input-label").innerHTML = "Fog distance (0 to turn off): " + fog
+
+    scene.fog.far = fog
+
+})
+
+document.querySelector("#gravity-input").addEventListener("change", (e)=>{
+
+    let g = parseInt(e.target.value)
+    document.querySelector("#gravity-input-label").innerHTML = "Gravity strength: " + g
+
+    gravity = g
+
+})
