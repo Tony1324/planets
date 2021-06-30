@@ -6,6 +6,8 @@ const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.inner
 const clock = new THREE.Clock();
 const raycaster = new THREE.Raycaster();
 
+camera.position.z = 4
+camera.position.y = 1
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -99,16 +101,19 @@ document.querySelector("#start-btn").addEventListener("click", ()=>{
 })
 
 let gravity = 30
+ 
+let dt = 10
 
 class Planet {
-    constructor(pos,size,resolution){
-        let geometry = new THREE.IcosahedronGeometry(size,resolution); 
+    constructor(pos,vel,size){
+        let geometry = new THREE.IcosahedronGeometry(size,10); 
         let material = new THREE.MeshLambertMaterial({wireframe:true});
     
         this.radius = size
         this.object = new THREE.Mesh( geometry, material );
         this.mass = Math.pow(size,3)*Math.PI*4/3*2
-        this.velocity = new THREE.Vector3( Math.random()/1000, Math.random()/1000, Math.random()/1000);
+        this.velocity = new THREE.Vector3(0, 0, 0);
+        Object.assign(this.velocity, vel)
         this.acceleration = new THREE.Vector3( 0, 0, 0);
 
         Object.assign(this.object.position,pos)
@@ -116,10 +121,10 @@ class Planet {
     }
 
     move(){
-        let a = this.acceleration.clone()
-        a.multiplyScalar(1/this.mass)
         this.velocity.add(this.acceleration)
-        this.object.position.add(this.velocity)
+        let v = this.velocity.clone()
+        v.multiplyScalar(1/dt)
+        this.object.position.add(v)
     }
 
     physics(){
@@ -155,7 +160,7 @@ class Planet {
                     let totalMass = this.mass + planet.mass
 
 
-                    direction.multiplyScalar((v1 - v2)*0.9)
+                    direction.multiplyScalar((v1 - v2))
                     let f1 = direction.clone()
                     f1.multiplyScalar(planet.mass/totalMass * 2)
                     this.velocity.sub(f1)
@@ -171,9 +176,21 @@ class Planet {
 
 let planets = []
 
-for(let i=0; i<15; i++){
-    planets.push(new Planet({x:Math.random()*10-5,z:Math.random()*10-5,y:Math.random()*10-5},Math.random(),10))
-}
+// for(let i=0; i<15; i++){
+    // planets.push(new Planet({x:Math.random()*10-5,z:Math.random()*10-5,y:Math.random()*10-5},{x:0,y:0,z:0},Math.random(),10))
+// }
+planets.push(new Planet({x:0,y:0,z:0}, {x:0,y:0,z:0},1))
+planets.push(new Planet({x:1.6,y:0.1,z:0}, {x:0,y:0,z:0.04},0.2))
+planets.push(new Planet({x:-3,y:-0.2,z:0}, {x:0,y:0,z:-0.03},0.3))
+planets.push(new Planet({x:-3.5,y:-0.2,z:0}, {x:0,y:0,z:-0.015},0.05))
+planets.push(new Planet({x:3,y:-0.2,z:3}, {x:-0.02,y:0,z:0.015},0.25))
+planets.push(new Planet({x:5,y:0.1,z:0}, {x:-0.02,y:0.001,z:0.02},0.2))
+
+planets.push(new Planet({x:-2,y:-0.2,z:0}, {x:0,y:0.01,z:0.03},0.04))
+planets.push(new Planet({x:1,y:0.2,z:1}, {x:0,y:0.01,z:0.03},0.02))
+planets.push(new Planet({x:-3,y:0.2,z:0}, {x:0,y:0.01,z:0.03},0.04))
+planets.push(new Planet({x:2,y:0.1,z:0}, {x:0,y:0.01,z:0.03},0.03))
+planets.push(new Planet({x:-2,y:-0.1,z:2}, {x:0,y:0.01,z:0.03},0.04))
 
 let intersects = []
 
@@ -182,6 +199,45 @@ function animate() {
 
     intersects[0]?.object.material.color.set( 0xffffff );
 
+
+
+    for(let i=0; i<dt; i++){
+        for(let planet of planets){
+            planet.physics()
+        }
+        for(let planet of planets){
+            planet.move()
+        }
+    }
+
+    const center = new THREE.Vector2(0, 0)
+    raycaster.setFromCamera(center, camera)
+
+    intersects = raycaster.intersectObjects(scene.children)
+
+    intersects[0]?.object.material.color.set( 0x66ff66 );
+
+    if(pointerControls.isLocked){
+    if(isPushing || isPulling){
+        for(let planet of planets){
+            if(planet.object == intersects[0]?.object){
+
+                intersects[0]?.object.material.color.set( 0x00ff00 );
+                let direction = pointerControls.getObject().getWorldDirection()
+                if(isPulling){
+                    planet.velocity.x -= Math.sin(direction.x)/350
+                    planet.velocity.y -= Math.sin(direction.y)/350
+                    planet.velocity.z -= Math.sin(direction.z)/350
+                    planet.velocity.multiplyScalar(0.9)
+                }else{
+                    planet.velocity.x += Math.sin(direction.x)/350
+                    planet.velocity.y += Math.sin(direction.y)/350
+                    planet.velocity.z += Math.sin(direction.z)/350
+                    planet.velocity.multiplyScalar(0.9)
+                }
+            }
+        }
+    }
 
     if(isForward){
         let direction = pointerControls.getObject().getWorldDirection()
@@ -203,41 +259,7 @@ function animate() {
     if(isRight){
         pointerControls.moveRight(0.05)
     }
-
-    for(let planet of planets){
-        planet.physics()
-    }
-    for(let planet of planets){
-        planet.move()
-    }
-
-    const center = new THREE.Vector2(0, 0)
-    raycaster.setFromCamera(center, camera)
-
-    intersects = raycaster.intersectObjects(scene.children)
-
-    intersects[0]?.object.material.color.set( 0x66ff66 );
-
-    if(isPushing || isPulling){
-        for(let planet of planets){
-            if(planet.object == intersects[0]?.object){
-
-                intersects[0]?.object.material.color.set( 0x00ff00 );
-                let direction = pointerControls.getObject().getWorldDirection()
-                if(isPulling){
-                    planet.velocity.x -= Math.sin(direction.x)/350
-                    planet.velocity.y -= Math.sin(direction.y)/350
-                    planet.velocity.z -= Math.sin(direction.z)/350
-                    planet.velocity.multiplyScalar(0.9)
-                }else{
-                    planet.velocity.x += Math.sin(direction.x)/350
-                    planet.velocity.y += Math.sin(direction.y)/350
-                    planet.velocity.z += Math.sin(direction.z)/350
-                    planet.velocity.multiplyScalar(0.9)
-                }
-            }
-        }
-    }
+}
 
     renderer.render( scene, camera );
 
