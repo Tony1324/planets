@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
+
 body {
     margin: 0;
-    font-family: sans-serif;
+    font-family:"Open Sans", sans-serif;
 }
 
 * {
@@ -24,6 +26,11 @@ body {
     justify-content: center;
 }
 
+
+p {
+    margin: 0.5em 0;
+}
+
 button {
     background-color: white;
     border:none;
@@ -32,6 +39,10 @@ button {
     padding:5px;
     font-size: 15px;
     width:200px;
+}
+
+a {
+    color: skyblue;
 }
 
 #cursor {

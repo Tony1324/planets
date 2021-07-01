@@ -93,21 +93,35 @@ window.addEventListener("keyup", (e)=>{
     }
 })
 
-
-
 document.querySelector("#start-btn").addEventListener("click", ()=>{
     pointerControls.connect()
     pointerControls.lock()
+})
+
+document.addEventListener("keypress", (e)=>{
+    if(pointerControls.isLocked){
+        if(e.code == "Space"){
+            let pos = pointerControls.getObject().position.clone()
+            let direction = pointerControls.getObject().getWorldDirection()
+            pos.x += Math.sin(direction.x)
+            pos.y += Math.sin(direction.y)
+            pos.z += Math.sin(direction.z)
+
+            planets.push(new Planet(pos, {x:0,y:0,z:0},0.4))
+        }
+    }
 })
 
 let gravity = 30
  
 let dt = 10
 
+let isWireframe = true
+
 class Planet {
     constructor(pos,vel,size){
         let geometry = new THREE.IcosahedronGeometry(size,10); 
-        let material = new THREE.MeshLambertMaterial({wireframe:true});
+        let material = new THREE.MeshLambertMaterial({wireframe:isWireframe});
     
         this.radius = size
         this.object = new THREE.Mesh( geometry, material );
@@ -176,9 +190,6 @@ class Planet {
 
 let planets = []
 
-// for(let i=0; i<15; i++){
-    // planets.push(new Planet({x:Math.random()*10-5,z:Math.random()*10-5,y:Math.random()*10-5},{x:0,y:0,z:0},Math.random(),10))
-// }
 planets.push(new Planet({x:0,y:0,z:0}, {x:0,y:0,z:0},1))
 planets.push(new Planet({x:1.6,y:0.1,z:0}, {x:0,y:0,z:0.04},0.2))
 planets.push(new Planet({x:-3,y:-0.2,z:0}, {x:0,y:0,z:-0.03},0.3))
@@ -270,7 +281,6 @@ animate();
 
 
 //menu options
-let isWireframe = true
 
 document.querySelector("#wireframe-btn").addEventListener("click",()=>{
     isWireframe = !isWireframe
